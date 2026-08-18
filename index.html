@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Secure File Sharing | Cloud247</title>
+  <meta name="description" content="Krypter filer lokalt og del dem over nett. Cloud247 lagrer bare kryptert innhold, og dekrypteringsnøkkelen sendes aldri til filserveren.">
+  <meta name="theme-color" content="#061A2F">
+  <meta property="og:title" content="Secure File Sharing | Cloud247">
+  <meta property="og:description" content="Ende-til-ende-kryptert fildeling med utløpstid og valgfri sletting etter første henting.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="config.js" defer></script>
+  <script src="crypto-core.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#secure-file">Gå til Secure File Sharing</a>
+
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="cloud-brand" href="https://cloud247.no/" aria-label="Cloud247 forside">
+        <img src="assets/cloud247-logo.svg" alt="Cloud247 Technology">
+      </a>
+      <span class="header-label">Secure File Sharing</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="cloud-hero" id="secure-file">
+      <div class="shell cloud-hero-inner">
+        <div class="cloud-hero-copy">
+          <p class="cloud-eyebrow">CLOUD TOOLBOX</p>
+          <h1>Secure File Sharing</h1>
+          <p>Krypter filen i nettleseren før den lastes opp. R2 lagrer bare kryptert data, mens dekrypteringsnøkkelen blir igjen hos deg og mottakeren.</p>
+          <div class="hero-trust-row" aria-label="Sikkerhetsfunksjoner">
+            <span>AES-256-GCM</span><span>Klientkryptering</span><span>Utløpstid</span><span>Ingen servernøkkel</span>
+          </div>
+        </div>
+
+        <div class="secure-card hero-action-card cloud-panel">
+          <div class="hero-card-heading">
+            <div>
+              <p class="hero-card-kicker">SIKKER FILDELING</p>
+              <h2>Del eller åpne</h2>
+              <p>Originalfilen forlater aldri nettleseren ukryptert.</p>
+            </div>
+            <span class="local-badge" id="apiBadge">Krypteres lokalt</span>
+          </div>
+
+          <div class="tab-switch" role="tablist" aria-label="Velg handling">
+            <button type="button" class="tab-button is-active" data-tab="encrypt" role="tab" aria-selected="true">Krypter og del</button>
+            <button type="button" class="tab-button" data-tab="decrypt" role="tab" aria-selected="false">Åpne delt fil</button>
+          </div>
+
+          <section id="encryptPanel" role="tabpanel">
+            <input id="encryptFileInput" type="file" hidden>
+            <div class="drop-zone" id="encryptDropZone" tabindex="0" role="button" aria-label="Velg fil som skal deles">
+              <div class="drop-icon" aria-hidden="true">↑</div>
+              <div id="encryptFileInfo"><strong>Ingen fil valgt</strong><span>Dra en fil hit eller velg fra enheten.</span></div>
+              <span class="choose-file">Velg fil</span>
+            </div>
+
+            <fieldset class="security-mode">
+              <legend>Beskyttelse</legend>
+              <label class="mode-option">
+                <input type="radio" name="securityMode" value="key" checked>
+                <span><strong>Generert nøkkel</strong><small>Anbefalt · tilfeldig 256-bit nøkkel</small></span>
+              </label>
+              <label class="mode-option">
+                <input type="radio" name="securityMode" value="password">
+                <span><strong>Passord</strong><small>Passordet deles separat med mottakeren</small></span>
+              </label>
+            </fieldset>
+
+            <div class="inline-note" id="keyModeNote"><strong>Nøkkelen opprettes bare i nettleseren</strong><span>Du kan legge nøkkelen i delingslenken eller sende den separat.</span></div>
+
+            <div class="password-fields" id="passwordFields" hidden>
+              <label class="field"><span>Passord</span><input id="encryptPassword" type="password" autocomplete="new-password" minlength="12" placeholder="Minst 12 tegn"><small>Bruk et langt, unikt passord.</small></label>
+              <label class="field"><span>Gjenta passord</span><input id="encryptPasswordConfirm" type="password" autocomplete="new-password" minlength="12"></label>
+            </div>
+
+            <div class="share-settings">
+              <label class="field compact"><span>Utløper etter</span>
+                <select id="expiresIn">
+                  <option value="3600">1 time</option>
+                  <option value="86400" selected>24 timer</option>
+                  <option value="604800">7 dager</option>
+                </select>
+              </label>
+              <label class="setting-check"><input id="oneTime" type="checkbox"><span><strong>Slett etter første henting</strong><small>Best effort · samtidige henting kan i sjeldne tilfeller lykkes.</small></span></label>
+              <label class="setting-check" id="includeKeyRow"><input id="includeKeyInLink" type="checkbox" checked><span><strong>Legg nøkkelen i delingslenken</strong><small>Enklest. Slå av for å sende nøkkelen i en separat kanal.</small></span></label>
+            </div>
+
+            <div class="api-status" id="apiStatus" aria-live="polite"><span class="status-dot"></span><span>Kontrollerer filserver…</span></div>
+            <button class="primary-button full-button" id="encryptButton" type="button" disabled>Krypter og last opp</button>
+
+            <div class="result-box" id="encryptResult" hidden>
+              <div class="result-head"><div><span>KLAR TIL DELING</span><strong id="encryptStatus">Filen er kryptert og lastet opp</strong></div><span class="status-good">Klar</span></div>
+              <div class="file-summary" id="encryptedSummary"></div>
+              <label class="field compact"><span>Delingslenke</span><div class="copy-field"><input id="shareLink" readonly><button id="copyLink" type="button">Kopier</button></div></label>
+              <div id="keyResultArea">
+                <label class="field compact"><span>Åpningsnøkkel</span><div class="copy-field"><input id="generatedKey" readonly><button id="copyKey" type="button">Kopier</button></div><small id="keyShareHint"></small></label>
+              </div>
+              <div class="share-meta" id="shareMeta"></div>
+              <div class="action-grid">
+                <button class="primary-button" id="shareLinkButton" type="button">Del lenke</button>
+                <button class="secondary-button" id="downloadEncrypted" type="button">Last ned kryptert kopi</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="decryptPanel" role="tabpanel" hidden>
+            <div class="remote-share" id="remoteShare" hidden>
+              <div class="remote-share-head"><div><p class="hero-card-kicker">DELT FIL</p><strong id="remoteFileId">–</strong></div><span class="status-pill" id="remoteAvailability">Kontrollerer…</span></div>
+              <div class="remote-meta" id="remoteMeta"></div>
+              <label class="field" id="remoteKeyGroup" hidden><span>Åpningsnøkkel</span><input id="remoteKey" type="text" autocomplete="off" spellcheck="false" placeholder="c247_..."></label>
+              <label class="field" id="remotePasswordGroup" hidden><span>Passord</span><input id="remotePassword" type="password" autocomplete="current-password" placeholder="Skriv inn passordet som ble delt med deg"></label>
+              <button class="primary-button full-button" id="fetchSharedFile" type="button">Hent og åpne fil</button>
+              <div class="result-box" id="remoteResult" hidden>
+                <div class="result-head"><div><span>DEKRYPTERT</span><strong>Filen er autentisert og klar</strong></div><span class="status-good">OK</span></div>
+                <div class="file-summary" id="remoteDecryptedSummary"></div>
+                <button class="primary-button full-button" id="downloadRemoteDecrypted" type="button">Last ned originalfil</button>
+              </div>
+            </div>
+
+            <div class="local-separator"><span>Eller åpne en lokal .c247-fil</span></div>
+            <input id="decryptFileInput" type="file" accept=".c247,application/octet-stream" hidden>
+            <div class="drop-zone" id="decryptDropZone" tabindex="0" role="button" aria-label="Velg lokal kryptert fil">
+              <div class="drop-icon" aria-hidden="true">↓</div>
+              <div id="decryptFileInfo"><strong>Ingen kryptert fil valgt</strong><span>Velg en lokal .c247-fil.</span></div>
+              <span class="choose-file">Velg fil</span>
+            </div>
+            <div class="inline-note" id="decryptModeInfo" hidden></div>
+            <label class="field" id="decryptKeyGroup"><span>Åpningsnøkkel</span><input id="decryptKey" type="text" autocomplete="off" spellcheck="false" placeholder="c247_..."></label>
+            <label class="field" id="decryptPasswordGroup" hidden><span>Passord</span><input id="decryptPassword" type="password" autocomplete="current-password"></label>
+            <button class="secondary-button full-button" id="decryptButton" type="button" disabled>Åpne lokal fil</button>
+            <div class="result-box" id="decryptResult" hidden>
+              <div class="result-head"><div><span>DEKRYPTERT</span><strong id="decryptStatus">Filen er autentisert og dekryptert</strong></div><span class="status-good">OK</span></div>
+              <div class="file-summary" id="decryptedSummary"></div>
+              <button class="primary-button full-button" id="downloadDecrypted" type="button">Last ned originalfil</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature-section">
+      <div class="shell">
+        <div class="features-title"><p class="section-eyebrow">PERSONVERN OG SIKKERHET</p><h2>Serveren trenger aldri dekrypteringsnøkkelen</h2></div>
+        <div class="feature-grid">
+          <article><span>01</span><h3>Kryptert før opplasting</h3><p>AES-256-GCM kjøres i nettleseren. Filnavn, MIME-type og selve innholdet ligger inne i den krypterte pakken.</p></article>
+          <article><span>02</span><h3>Kort levetid</h3><p>Velg 1 time, 24 timer eller 7 dager. Worker avviser utløpte filer og en planlagt jobb rydder dem fra R2.</p></article>
+          <article><span>03</span><h3>Nøkkel i URL-fragment</h3><p>Ved enkel deling ligger nøkkelen etter <code>#</code> i lenken. Fragmentet sendes ikke som del av HTTP-forespørselen til API-et.</p></article>
+        </div>
+        <div class="security-notice"><strong>Om «slett etter første henting»</strong><p>Worker sletter objektet fra R2 ved første GET. Dette er en praktisk engangsfunksjon, men ikke en kryptografisk eller atomisk garanti ved helt samtidige forespørsler. For sensitiv deling bør nøkkelen sendes i en separat kanal.</p></div>
+      </div>
+    </section>
+
+    <section class="more-tools-section"><div class="shell"><div class="more-tools-card"><div><p class="cloud-eyebrow">CLOUD TOOLBOX</p><h2>Se mine andre verktøy</h2><p>Flere enkle verktøy for Microsoft 365, Intune, e-post og sikkerhet.</p></div><a class="tools-button" href="https://cloud247.no/">Gå til Cloud247 <span aria-hidden="true">→</span></a></div></div></section>
+
+    <section class="coffee-section" aria-labelledby="coffee-title"><div class="shell"><div class="coffee-card"><div class="coffee-icon" aria-hidden="true">☕</div><div class="coffee-copy"><p class="eyebrow">STØTT CLOUD247</p><h2 id="coffee-title">Spander meg en kaffe</h2><p>Hvis et av verktøyene har spart deg litt tid, kan du støtte videre utvikling med en kaffe.</p></div><div class="coffee-action"><strong>20 kr</strong><a class="vipps-button" href="https://qr.vipps.no/box/90e4bd01-a470-474a-98fa-8b48f69b0f4e/pay-in" target="_blank" rel="noopener noreferrer">Spander 20 kr med Vipps</a></div></div></div></section>
+  </main>
+
+  <footer class="cloud-footer"><div class="shell footer-inner"><span>© <span id="year"></span> Cloud247</span><a href="https://cloud247.no/">cloud247.no</a></div></footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
