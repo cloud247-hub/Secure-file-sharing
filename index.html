@@ -64,29 +64,20 @@
 
             <fieldset class="security-mode">
               <legend>Beskyttelse</legend>
-              <label class="mode-option">
-                <input type="radio" name="securityMode" value="key" checked>
-                <span><strong>Generert nøkkel</strong><small>Anbefalt · tilfeldig 256-bit nøkkel</small></span>
-              </label>
-              <label class="mode-option">
-                <input type="radio" name="securityMode" value="password">
-                <span><strong>Passord</strong><small>Passordet deles separat med mottakeren</small></span>
-              </label>
+              <div class="mode-option mode-option-fixed">
+                <span class="mode-check" aria-hidden="true">✓</span>
+                <span><strong>Generert nøkkel</strong><small>Tilfeldig 256-bit nøkkel opprettes lokalt i nettleseren.</small></span>
+              </div>
             </fieldset>
 
             <div class="inline-note" id="keyModeNote"><strong>Nøkkelen opprettes bare i nettleseren</strong><span>Du kan legge nøkkelen i delingslenken eller sende den separat.</span></div>
 
-            <div class="password-fields" id="passwordFields" hidden>
-              <label class="field"><span>Passord</span><input id="encryptPassword" type="password" autocomplete="new-password" minlength="12" placeholder="Minst 12 tegn"><small>Bruk et langt, unikt passord.</small></label>
-              <label class="field"><span>Gjenta passord</span><input id="encryptPasswordConfirm" type="password" autocomplete="new-password" minlength="12"></label>
-            </div>
-
             <div class="share-settings">
               <label class="field compact"><span>Utløper etter</span>
                 <select id="expiresIn">
-                  <option value="3600">1 time</option>
-                  <option value="86400" selected>24 timer</option>
-                  <option value="604800">7 dager</option>
+                  <option value="1800">30 minutter</option>
+                  <option value="3600" selected>1 time</option>
+                  <option value="10800">3 timer</option>
                 </select>
               </label>
               <label class="setting-check"><input id="oneTime" type="checkbox"><span><strong>Slett etter første henting</strong><small>Best effort · samtidige henting kan i sjeldne tilfeller lykkes.</small></span></label>

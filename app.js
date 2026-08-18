@@ -55,18 +55,6 @@
     $('decryptPanel').hidden = tab !== 'decrypt';
   }
 
-  function mode() {
-    return document.querySelector('input[name="securityMode"]:checked')?.value || 'key';
-  }
-
-  function updateModeUi() {
-    const passwordMode = mode() === 'password';
-    $('passwordFields').hidden = !passwordMode;
-    $('keyModeNote').hidden = passwordMode;
-    $('includeKeyRow').hidden = passwordMode;
-    $('encryptResult').hidden = true;
-  }
-
   function updateEncryptButton() {
     $('encryptButton').disabled = !(state.sourceFile && state.apiOnline);
   }
@@ -164,12 +152,8 @@
 
   async function encryptAndUpload() {
     if (!state.sourceFile || !state.apiOnline) return;
-    const selectedMode = mode();
-    const password = $('encryptPassword').value;
-    if (selectedMode === 'password') {
-      if (password.length < 12) return toast('Bruk et passord på minst 12 tegn.');
-      if (password !== $('encryptPasswordConfirm').value) return toast('Passordene er ikke like.');
-    }
+    const selectedMode = 'key';
+    const password = '';
     const button = $('encryptButton');
     button.disabled = true;
     button.textContent = 'Krypterer og laster opp…';
@@ -381,7 +365,6 @@
   }
 
   document.querySelectorAll('[data-tab]').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
-  document.querySelectorAll('input[name="securityMode"]').forEach(input => input.addEventListener('change', updateModeUi));
   bindDropZone('encryptDropZone', 'encryptFileInput', setEncryptFile);
   bindDropZone('decryptDropZone', 'decryptFileInput', setPackageFile);
   $('encryptButton').addEventListener('click', encryptAndUpload);
@@ -393,7 +376,6 @@
   $('fetchSharedFile').addEventListener('click', fetchAndOpenRemote);
   $('downloadRemoteDecrypted').addEventListener('click', () => state.remote.download && downloadBlob(state.remote.download.blob, state.remote.download.name));
   $('year').textContent = new Date().getFullYear();
-  updateModeUi();
   loadRemoteFromFragment();
   checkApi();
 })();
