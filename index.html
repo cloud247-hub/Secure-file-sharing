@@ -107,7 +107,6 @@
               <div class="remote-share-head"><div><p class="hero-card-kicker">DELT FIL</p><strong id="remoteFileId">–</strong></div><span class="status-pill" id="remoteAvailability">Kontrollerer…</span></div>
               <div class="remote-meta" id="remoteMeta"></div>
               <label class="field" id="remoteKeyGroup" hidden><span>Åpningsnøkkel</span><input id="remoteKey" type="text" autocomplete="off" spellcheck="false" placeholder="c247_..."></label>
-              <label class="field" id="remotePasswordGroup" hidden><span>Passord</span><input id="remotePassword" type="password" autocomplete="current-password" placeholder="Skriv inn passordet som ble delt med deg"></label>
               <button class="primary-button full-button" id="fetchSharedFile" type="button">Hent og åpne fil</button>
               <div class="result-box" id="remoteResult" hidden>
                 <div class="result-head"><div><span>DEKRYPTERT</span><strong>Filen er autentisert og klar</strong></div><span class="status-good">OK</span></div>
@@ -142,7 +141,7 @@
         <div class="features-title"><p class="section-eyebrow">PERSONVERN OG SIKKERHET</p><h2>Serveren trenger aldri dekrypteringsnøkkelen</h2></div>
         <div class="feature-grid">
           <article><span>01</span><h3>Kryptert før opplasting</h3><p>AES-256-GCM kjøres i nettleseren. Filnavn, MIME-type og selve innholdet ligger inne i den krypterte pakken.</p></article>
-          <article><span>02</span><h3>Kort levetid</h3><p>Velg 1 time, 24 timer eller 7 dager. Worker avviser utløpte filer og en planlagt jobb rydder dem fra R2.</p></article>
+          <article><span>02</span><h3>Kort levetid</h3><p>Velg 30 minutter, 1 time eller 3 timer. Worker avviser utløpte filer og en planlagt jobb rydder dem fra R2.</p></article>
           <article><span>03</span><h3>Nøkkel i URL-fragment</h3><p>Ved enkel deling ligger nøkkelen etter <code>#</code> i lenken. Fragmentet sendes ikke som del av HTTP-forespørselen til API-et.</p></article>
         </div>
         <div class="security-notice"><strong>Om «slett etter første henting»</strong><p>Worker sletter objektet fra R2 ved første GET. Dette er en praktisk engangsfunksjon, men ikke en kryptografisk eller atomisk garanti ved helt samtidige forespørsler. For sensitiv deling bør nøkkelen sendes i en separat kanal.</p></div>

@@ -16,6 +16,7 @@
     remote: { id: '', mode: '', key: '', expiresAt: '', oneTime: false, size: 0, bytes: null, download: null },
     apiOnline: false
   };
+  let remoteCountdownTimer = null;
 
   function formatBytes(bytes) {
     if (!Number.isFinite(bytes)) return '–';
@@ -30,6 +31,60 @@
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '–';
     return new Intl.DateTimeFormat('nb-NO', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+  }
+
+  function expirationTime(value) {
+    if (value === null || value === undefined || value === '') return NaN;
+    const numeric = Number(value);
+    if (Number.isFinite(numeric) && numeric > 0) {
+      return numeric < 1e12 ? numeric * 1000 : numeric;
+    }
+    const parsed = Date.parse(String(value));
+    return Number.isFinite(parsed) ? parsed : NaN;
+  }
+
+  function formatRemaining(value) {
+    const expiresAt = expirationTime(value);
+    if (!Number.isFinite(expiresAt)) return '–';
+    const remaining = Math.max(0, expiresAt - Date.now());
+    if (remaining <= 0) return 'Utløpt';
+    const totalSeconds = Math.ceil(remaining / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    if (hours > 0) return `${hours} t ${minutes} min ${seconds} sek`;
+    if (minutes > 0) return `${minutes} min ${seconds} sek`;
+    return `${seconds} sek`;
+  }
+
+  function stopRemoteCountdown() {
+    if (remoteCountdownTimer) clearInterval(remoteCountdownTimer);
+    remoteCountdownTimer = null;
+  }
+
+  function updateRemoteCountdown() {
+    const el = $('remoteExpiresCountdown');
+    if (!el) return;
+    const text = formatRemaining(state.remote.expiresAt);
+    el.textContent = text;
+    el.classList.toggle('is-expired', text === 'Utløpt');
+    if (text === 'Utløpt') {
+      stopRemoteCountdown();
+      if (!state.remote.download) $('fetchSharedFile').disabled = true;
+      const pill = $('remoteAvailability');
+      if (pill && !state.remote.download) {
+        pill.textContent = 'Utløpt';
+        pill.className = 'status-pill is-bad';
+      }
+    }
+  }
+
+  function startRemoteCountdown() {
+    stopRemoteCountdown();
+    updateRemoteCountdown();
+    if (formatRemaining(state.remote.expiresAt) !== 'Utløpt' && Number.isFinite(expirationTime(state.remote.expiresAt))) {
+      remoteCountdownTimer = setInterval(updateRemoteCountdown, 1000);
+    }
   }
 
   function escapeHtml(value) {
@@ -285,12 +340,12 @@
 
   function renderRemoteMeta() {
     const meta = state.remote;
-    $('remoteMeta').innerHTML = [
-      ['Utløper', meta.expiresAt ? formatDate(meta.expiresAt) : '–'],
-      ['Sletting', meta.oneTime ? 'Ved første henting' : 'Ved utløp'],
-      ['Kryptert størrelse', meta.size ? formatBytes(meta.size) : '–'],
-      ['Beskyttelse', meta.mode === 'password' ? 'Passord' : 'Generert nøkkel']
-    ].map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('');
+    $('remoteMeta').innerHTML = `
+      <div><span>Utløper</span><strong id="remoteExpiresCountdown">${escapeHtml(formatRemaining(meta.expiresAt))}</strong></div>
+      <div><span>Sletting</span><strong>${escapeHtml(meta.oneTime ? 'Ved første henting' : 'Ved utløp')}</strong></div>
+      <div><span>Kryptert størrelse</span><strong>${escapeHtml(meta.size ? formatBytes(meta.size) : '–')}</strong></div>
+      <div><span>Beskyttelse</span><strong>Generert nøkkel</strong></div>`;
+    startRemoteCountdown();
   }
 
   async function inspectRemoteShare() {
@@ -312,12 +367,10 @@
   }
 
   async function fetchAndOpenRemote() {
-    const { id, mode: remoteMode } = state.remote;
+    const { id } = state.remote;
     if (!id) return;
     const key = $('remoteKey').value.trim();
-    const password = $('remotePassword').value;
-    if (remoteMode === 'key' && !key) return toast('Skriv inn åpningsnøkkelen.');
-    if (remoteMode === 'password' && !password) return toast('Skriv inn passordet.');
+    if (!key) return toast('Skriv inn åpningsnøkkelen.');
     const button = $('fetchSharedFile');
     button.disabled = true; button.textContent = 'Henter og åpner…';
     try {
@@ -329,7 +382,7 @@
         bytes = new Uint8Array(await response.arrayBuffer());
         state.remote.bytes = bytes;
       }
-      const result = await Core.decryptPackage({ packageBytes: bytes, keyToken: key, password });
+      const result = await Core.decryptPackage({ packageBytes: bytes, keyToken: key, password: '' });
       const blob = new Blob([result.fileBytes], { type: result.metadata.type || 'application/octet-stream' });
       state.remote.download = { blob, name: result.metadata.name || 'dekryptert-fil' };
       $('remoteResult').hidden = false;
@@ -353,12 +406,11 @@
     const id = params.get('file');
     if (!id) return;
     state.remote.id = id;
-    state.remote.mode = params.get('mode') === 'password' ? 'password' : 'key';
+    state.remote.mode = 'key';
     state.remote.key = params.get('key') || '';
     $('remoteShare').hidden = false;
     $('remoteFileId').textContent = id;
-    $('remoteKeyGroup').hidden = state.remote.mode !== 'key';
-    $('remotePasswordGroup').hidden = state.remote.mode !== 'password';
+    $('remoteKeyGroup').hidden = false;
     $('remoteKey').value = state.remote.key;
     switchTab('decrypt');
     inspectRemoteShare();
